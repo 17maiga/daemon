@@ -55,6 +55,7 @@ int date(char* incantation_path, char* curse_path) {
     printf("1\n");
     FILE* incantation_stream = fopen(incantation_path, "w");
     fprintf(incantation_stream, "--date");
+    fflush(incantation_stream);
     unlink(incantation_path);
 
     while (access(curse_path, F_OK)) {

@@ -38,7 +38,6 @@ int main() {
             int day = local->tm_mday;
             int month = local->tm_mon;
             int year = local->tm_year;
-            FILE* curse_stream = fopen(curse_path, "w");
             fprintf(curse_stream, "%d %d %d", day, month, year);
         } else if (!strcmp(incantation, "--reset")) {
             summoned = time(NULL);
