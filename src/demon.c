@@ -1,49 +1,50 @@
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
 
+char* incantation_path = "/tmp/daemon.incantation.txt";
+char* curse_path = "/tmp/daemon.curse.txt";
+
 int main() {
-    printf("hi");
-
     time_t summoned = time(NULL);
+    struct timeval last_spell_time;
+    gettimeofday(&last_spell_time, NULL);
     int status = 1;
-
-    char* incantation_path = "/tmp/daemon.incantation.txt";
-    if (mkfifo(incantation_path, 0666) != 0) {
-        perror("Couldn't talk to demon!\n");
-        exit(1);
-    }
-
-    char* curse_path = "/tmp/daemon.curse.txt";
-    if(mkfifo(curse_path, 0644) != 0) {
-        perror("The demon can't talk!\n");
-        remove(incantation_path);
-        exit(1);
-    }
+    FILE* incantation_stream = fopen(incantation_path, "r");
 
     while (status) {
-        int incantation_stream = fopen(incantation_path, "r");
-        char incantation[50];
-        fscanf(incantation_stream, "%s", incantation);
-        if (!strcmp(incantation, "--stop")) {
-            status = 0;
-        } else if (!strcmp(incantation, "--date")) {
-            time_t now;
-            time(&now);
-            struct tm *local = localtime(&now);
-            int day = local->tm_mday;
-            int month = local->tm_mon;
-            int year = local->tm_year;
-            fprintf(curse_stream, "%d %d %d", day, month, year);
-        } else if (!strcmp(incantation, "--reset")) {
-            summoned = time(NULL);
+        char input[50];
+        struct timeval spell_time;
+        fscanf(incantation_stream, "%ld %ld %s", &spell_time.tv_sec, &spell_time.tv_usec, input);
+
+        if (spell_time.tv_sec != last_spell_time.tv_sec || spell_time.tv_usec != last_spell_time.tv_usec) {
+            last_spell_time = spell_time;
+
+            if (!strcmp(input, "date")) {
+                FILE* curse_stream = fopen(curse_path, "w");
+                fprintf(curse_stream, "%ld", time(NULL));
+                fclose(curse_stream);
+
+            } else if (!strcmp(input, "duration")) {
+                FILE* curse_stream = fopen(curse_path, "w");
+                fprintf(curse_stream, "%ld", time(NULL) - summoned);
+                fclose(curse_stream);
+
+            } else if (!strcmp(input, "reset")) {
+                summoned = time(NULL);
+
+            } else if (!strcmp(input, "stop")) {
+                fclose(incantation_stream);
+                unlink(incantation_path);
+                unlink(curse_path);
+                status = 0;
+            }
         }
+        rewind(incantation_stream);
     }
-    remove(incantation_path);
-    remove(curse_path);
     exit(0);
-}
+};

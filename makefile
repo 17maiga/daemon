@@ -1,8 +1,8 @@
 build:
-	cd src2 && gcc -o demon demon.c
-	cd src2 && gcc -o summoner summoner.c
-	mv src2/demon bin/demon
-	mv src2/summoner bin/summoner
+	cd src && gcc -o demon demon.c
+	cd src && gcc -o summoner summoner.c spells.c
+	mv src/demon bin/demon
+	mv src/summoner bin/summoner
 
 reset:
 	rm -f /tmp/daemon.incantation.txt
