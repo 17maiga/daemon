@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
         exit(0);
 
     } else {
-        printf("Unknown incantation: %s\nEnter 'summoner --help' to display the summoner's manual\n", argv[1]);
+        printf("Unknown spell: %s\nEnter 'summoner --help' to display the summoner's manual\n", argv[1]);
         return -1;
     }
 }

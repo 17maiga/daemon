@@ -3,49 +3,40 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/time.h>
-#include <time.h>
 #include <unistd.h>
 
-#include "spells.h"
-
-char* incantation_path = "/tmp/daemon.incantation.txt";
-char* curse_path = "/tmp/daemon.curse.txt";
+#include "vars.h"
 
 void date() {
-    if (access(incantation_path, F_OK)) {
+    if (access(INCANTATION_PATH, F_OK)) {
         printf("No demon summoned!\nUse 'summoner --start' to summon a demon\n");
         exit(0);
     }
-    FILE* incantation_stream = fopen(incantation_path, "w");
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    fprintf(incantation_stream, "%ld %ld %s", tv.tv_sec, tv.tv_usec, "date");
-    fclose(incantation_stream);
+    int incantations = open(INCANTATION_PATH, O_WRONLY);
+    write(incantations, "date", BUFFER_SIZE);
 
-    FILE* curse_stream = fopen(curse_path, "r");
-    long output;
-    fscanf(curse_stream, "%ld", &output);
-    fclose(curse_stream);
-    printf("%lds have passed since January 1st, 1970\n", output);
+    int curses = open(CURSE_PATH, O_RDONLY);
+    char output[BUFFER_SIZE];
+    read(curses, output, BUFFER_SIZE);
+    close(curses);
+    printf("The current date in hell is the %s\n", output);
 }
+
 void duration() {
-    if (access(incantation_path, F_OK)) {
+    if (access(INCANTATION_PATH, F_OK)) {
         printf("No demon summoned!\nUse 'summoner --start' to summon a demon\n");
         exit(0);
     }
-    FILE* incantation_stream = fopen(incantation_path, "w");
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    fprintf(incantation_stream, "%ld %ld %s", tv.tv_sec, tv.tv_usec, "duration");
-    fclose(incantation_stream);
+    int incantations = open(INCANTATION_PATH, O_WRONLY);
+    write(incantations, "duration", BUFFER_SIZE);
 
-    FILE* curse_stream = fopen(curse_path, "r");
-    long output;
-    fscanf(curse_stream, "%ld", &output);
-    fclose(curse_stream);
-    printf("The demon has been haunting you for %lds\n", output);
+    int curses = open(CURSE_PATH, O_RDONLY);
+    char output[BUFFER_SIZE];
+    read(curses, output, BUFFER_SIZE);
+    close(curses);
+    printf("The demon has been haunting you for %s\n", output);
 }
+
 void help() {
     printf("Usage: summoner [option]\n");
     printf("Options: \n");
@@ -58,32 +49,39 @@ void help() {
     printf("\t--status\tDisplay the status of the demon (alive/dead)\n");
     printf("\t--stop\t\tBanish the demon\n");
 }
+
 void reset() {
-    if (access(incantation_path, F_OK)) {
+    if (access(INCANTATION_PATH, F_OK)) {
         printf("No demon summoned!\nUse 'summoner --start' to summon a demon\n");
         exit(0);
     }
-    FILE* incantation_stream = fopen(incantation_path, "w");
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    fprintf(incantation_stream, "%ld %ld %s", tv.tv_sec, tv.tv_usec, "reset");
-    fclose(incantation_stream);
+    int incantations = open(INCANTATION_PATH, O_WRONLY);
+    write(incantations, "reset", BUFFER_SIZE);
     printf("The demon has been reset\n");
 }
+
 int start() {
+    if (access(INCANTATION_PATH, F_OK) == 0) {
+        printf("A demon is already haunting you!\nUse 'summoner --stop' to banish it to the shadow realm\n");
+        exit(EXIT_FAILURE);
+    }
     pid_t pid = fork();
+//    if (pid < 0) exit(EXIT_FAILURE);
+//    if (pid > 0) exit(EXIT_SUCCESS);
+//    if (setsid() < 0) exit(EXIT_FAILURE);
     switch(pid) {
         case -1:
             printf("Couldn't summon a demon!\n");
             exit(-1);
         case 0:
+            setsid();
             execl("./demon", "demon", NULL);
         default:
-            if (mkfifo(incantation_path, 0666) != 0) {
+            if (mkfifo(INCANTATION_PATH, 0666) != 0) {
                 perror("Couldn't talk to demon!");
                 exit(1);
             }
-            if (mkfifo(curse_path, 0666) != 0) {
+            if (mkfifo(CURSE_PATH, 0666) != 0) {
                 perror("The demon can't talk to you!");
                 exit(1);
             }
@@ -91,23 +89,22 @@ int start() {
             exit(0);
     }
 }
+
 void status() {
-    if (access(incantation_path, F_OK)) {
+    if (access(INCANTATION_PATH, F_OK)) {
         printf("No demon summoned!\nUse 'summoner --start' to summon a demon\n");
     } else {
         printf("A demon is haunting you!\nUse 'summoner --stop' to banish it to the shadow realms\n");
     }
     exit(0);
 }
+
 void stop() {
-    if (access(incantation_path, F_OK)) {
+    if (access(INCANTATION_PATH, F_OK)) {
         printf("No demon summoned!\nUse 'summoner --start' to summon a demon\n");
         exit(0);
     }
-    FILE* incantation_stream = fopen(incantation_path, "w");
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    fprintf(incantation_stream, "%ld %ld %s", tv.tv_sec, tv.tv_usec, "stop");
-    fclose(incantation_stream);
+    int incantations = open(INCANTATION_PATH, O_WRONLY);
+    write(incantations, "stop", BUFFER_SIZE);
     printf("The demon has been banished\n");
 }
