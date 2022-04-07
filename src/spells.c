@@ -8,14 +8,15 @@
 #include "vars.h"
 
 void date() {
-    if (access(INCANTATION_PATH, F_OK)) {
+    if (access(SPELL_PATH, F_OK)) {
         printf("No demon summoned!\nUse 'summoner --start' to summon a demon\n");
         exit(0);
     }
-    int incantations = open(INCANTATION_PATH, O_WRONLY);
+    int incantations = open(SPELL_PATH, O_WRONLY);
     write(incantations, "date", BUFFER_SIZE);
+    close(incantations);
 
-    int curses = open(CURSE_PATH, O_RDONLY);
+    int curses = open(SPELL_PATH, O_RDONLY);
     char output[BUFFER_SIZE];
     read(curses, output, BUFFER_SIZE);
     close(curses);
@@ -23,14 +24,15 @@ void date() {
 }
 
 void duration() {
-    if (access(INCANTATION_PATH, F_OK)) {
+    if (access(SPELL_PATH, F_OK)) {
         printf("No demon summoned!\nUse 'summoner --start' to summon a demon\n");
         exit(0);
     }
-    int incantations = open(INCANTATION_PATH, O_WRONLY);
+    int incantations = open(SPELL_PATH, O_WRONLY);
     write(incantations, "duration", BUFFER_SIZE);
+    close(incantations);
 
-    int curses = open(CURSE_PATH, O_RDONLY);
+    int curses = open(SPELL_PATH, O_RDONLY);
     char output[BUFFER_SIZE];
     read(curses, output, BUFFER_SIZE);
     close(curses);
@@ -51,17 +53,17 @@ void help() {
 }
 
 void reset() {
-    if (access(INCANTATION_PATH, F_OK)) {
+    if (access(SPELL_PATH, F_OK)) {
         printf("No demon summoned!\nUse 'summoner --start' to summon a demon\n");
         exit(0);
     }
-    int incantations = open(INCANTATION_PATH, O_WRONLY);
+    int incantations = open(SPELL_PATH, O_WRONLY);
     write(incantations, "reset", BUFFER_SIZE);
     printf("The demon has been reset\n");
 }
 
 int start() {
-    if (access(INCANTATION_PATH, F_OK) == 0) {
+    if (access(SPELL_PATH, F_OK) == 0) {
         printf("A demon is already haunting you!\nUse 'summoner --stop' to banish it to the shadow realm\n");
         exit(EXIT_FAILURE);
     }
@@ -69,42 +71,41 @@ int start() {
 //    if (pid < 0) exit(EXIT_FAILURE);
 //    if (pid > 0) exit(EXIT_SUCCESS);
 //    if (setsid() < 0) exit(EXIT_FAILURE);
+//    pid = fork();
+//    if (pid < 0) exit(EXIT_FAILURE);
+//    if (pid > 0) exit(EXIT_SUCCESS);
     switch(pid) {
         case -1:
             printf("Couldn't summon a demon!\n");
-            exit(-1);
+            exit(EXIT_FAILURE);
         case 0:
             setsid();
             execl("./demon", "demon", NULL);
         default:
-            if (mkfifo(INCANTATION_PATH, 0666) != 0) {
+            if (mkfifo(SPELL_PATH, 0644) != 0) {
                 perror("Couldn't talk to demon!");
-                exit(1);
-            }
-            if (mkfifo(CURSE_PATH, 0666) != 0) {
-                perror("The demon can't talk to you!");
-                exit(1);
+                exit(EXIT_FAILURE);
             }
             printf("A demon has been summoned!\n");
-            exit(0);
+            exit(EXIT_SUCCESS);
     }
 }
 
 void status() {
-    if (access(INCANTATION_PATH, F_OK)) {
+    if (access(SPELL_PATH, F_OK)) {
         printf("No demon summoned!\nUse 'summoner --start' to summon a demon\n");
     } else {
         printf("A demon is haunting you!\nUse 'summoner --stop' to banish it to the shadow realms\n");
     }
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 void stop() {
-    if (access(INCANTATION_PATH, F_OK)) {
+    if (access(SPELL_PATH, F_OK)) {
         printf("No demon summoned!\nUse 'summoner --start' to summon a demon\n");
         exit(0);
     }
-    int incantations = open(INCANTATION_PATH, O_WRONLY);
+    int incantations = open(SPELL_PATH, O_WRONLY);
     write(incantations, "stop", BUFFER_SIZE);
     printf("The demon has been banished\n");
 }
