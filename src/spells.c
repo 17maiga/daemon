@@ -1,44 +1,55 @@
-#include <fcntl.h>
+// This file contains the functions executed by summoner.c when the option
+// passed in by the user matches one of the predefined options, except the
+// [--start] option
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
-#include "vars.h"
+#include "utils.h" // Contains functions used to communicate with the daemon and check if it is running
+#include "vars.h" // Contains the named pipe's path and the buffer size
 
+// Used when the [--date] option is matched
+// Asks the daemon for the current date
 void date() {
-    if (access(SPELL_PATH, F_OK)) {
+    // If there is no daemon currently running, we inform the user and exit the program
+    if (is_haunted()) {
         printf("No demon summoned!\nUse 'summoner --start' to summon a demon\n");
-        exit(0);
+        exit(EXIT_FAILURE);
     }
-    int incantations = open(SPELL_PATH, O_WRONLY);
-    write(incantations, "date", BUFFER_SIZE);
-    close(incantations);
 
-    int curses = open(SPELL_PATH, O_RDONLY);
-    char output[BUFFER_SIZE];
-    read(curses, output, BUFFER_SIZE);
-    close(curses);
-    printf("The current date in hell is the %s\n", output);
+    // Send the "date" string to the daemon
+    send("date");
+
+    // Declare a string buffer and fill it with the value received from the daemon
+    char buffer[BUFFER_SIZE];
+    receive(buffer);
+
+    // Display the received value
+    printf("The current date in hell is the %s\n", buffer);
 }
 
+// Used when the [--duration] option is matched
+// Asks the daemon for its execution time
 void duration() {
-    if (access(SPELL_PATH, F_OK)) {
+    // If there is no daemon currently running, we inform the user and exit the program
+    if (is_haunted()) {
         printf("No demon summoned!\nUse 'summoner --start' to summon a demon\n");
-        exit(0);
+        exit(EXIT_FAILURE);
     }
-    int incantations = open(SPELL_PATH, O_WRONLY);
-    write(incantations, "duration", BUFFER_SIZE);
-    close(incantations);
 
-    int curses = open(SPELL_PATH, O_RDONLY);
-    char output[BUFFER_SIZE];
-    read(curses, output, BUFFER_SIZE);
-    close(curses);
-    printf("The demon has been haunting you for %s\n", output);
+    // Send the "duration" string to the daemon
+    send("duration");
+
+    // Declare a string buffer and fill it with the value received from the daemon
+    char buffer[BUFFER_SIZE];
+    receive(buffer);
+
+    // Display the received value
+    printf("The demon has been haunting you for %s\n", buffer);
 }
 
+// Used when the [--help] option is matched
+// Displays the summoner's help information
 void help() {
     printf("Usage: summoner [option]\n");
     printf("Options: \n");
@@ -52,60 +63,44 @@ void help() {
     printf("\t--stop\t\tBanish the demon\n");
 }
 
+// Used when the [--reset] option is matched
+// Instructs the daemon to reset its execution time counter
 void reset() {
-    if (access(SPELL_PATH, F_OK)) {
+    // If there is no daemon currently running, we inform the user and exit the program
+    if (is_haunted()) {
         printf("No demon summoned!\nUse 'summoner --start' to summon a demon\n");
-        exit(0);
+        exit(EXIT_FAILURE);
     }
-    int incantations = open(SPELL_PATH, O_WRONLY);
-    write(incantations, "reset", BUFFER_SIZE);
+
+    // Send the "reset" string to the daemon
+    send("reset");
+
+    // Inform the user that the daemon has been reset
     printf("The demon has been reset\n");
 }
 
-int start() {
-    if (access(SPELL_PATH, F_OK) == 0) {
-        printf("A demon is already haunting you!\nUse 'summoner --stop' to banish it to the shadow realm\n");
-        exit(EXIT_FAILURE);
-    }
-    pid_t pid = fork();
-//    if (pid < 0) exit(EXIT_FAILURE);
-//    if (pid > 0) exit(EXIT_SUCCESS);
-//    if (setsid() < 0) exit(EXIT_FAILURE);
-//    pid = fork();
-//    if (pid < 0) exit(EXIT_FAILURE);
-//    if (pid > 0) exit(EXIT_SUCCESS);
-    switch(pid) {
-        case -1:
-            printf("Couldn't summon a demon!\n");
-            exit(EXIT_FAILURE);
-        case 0:
-            setsid();
-            execl("./demon", "demon", NULL);
-        default:
-            if (mkfifo(SPELL_PATH, 0644) != 0) {
-                perror("Couldn't talk to demon!");
-                exit(EXIT_FAILURE);
-            }
-            printf("A demon has been summoned!\n");
-            exit(EXIT_SUCCESS);
-    }
-}
-
+// Used when the [--status] option is matched
+// Check whether the daemon is currently running and tell the user
 void status() {
-    if (access(SPELL_PATH, F_OK)) {
+    if (is_haunted()) {
         printf("No demon summoned!\nUse 'summoner --start' to summon a demon\n");
     } else {
         printf("A demon is haunting you!\nUse 'summoner --stop' to banish it to the shadow realms\n");
     }
-    exit(EXIT_SUCCESS);
 }
 
+// Used when the [--status] option is matched
+// Instructs the daemon to stop running
 void stop() {
-    if (access(SPELL_PATH, F_OK)) {
+    // If there is no daemon currently running, we inform the user and exit the program
+    if (is_haunted()) {
         printf("No demon summoned!\nUse 'summoner --start' to summon a demon\n");
-        exit(0);
+        exit(EXIT_FAILURE);
     }
-    int incantations = open(SPELL_PATH, O_WRONLY);
-    write(incantations, "stop", BUFFER_SIZE);
+
+    // Send the "stop" string to the daemon
+    send("stop");
+
+    // Inform the user that the daemon has been stopped
     printf("The demon has been banished\n");
 }
