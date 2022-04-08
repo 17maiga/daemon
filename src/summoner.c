@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "demon.h" // Contains the start function and the main execution loop of the daemon
 #include "spells.h" // Contains the different functions associated with the defined options
 
 int main(int argc, char** argv) {

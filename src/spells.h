@@ -11,7 +11,6 @@ void date();
 void duration();
 void help();
 void reset();
-int start();
 void status();
 void stop();
 
