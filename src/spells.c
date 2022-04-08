@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "utils.h" // Contains functions used to communicate with the daemon and check if it is running
 #include "vars.h" // Contains the named pipe's path and the buffer size
@@ -45,7 +46,7 @@ void duration() {
     receive(buffer);
 
     // Display the received value
-    printf("The demon has been haunting you for %s\n", buffer);
+    printf("The demon has been haunting you for %ss\n", buffer);
 }
 
 // Used when the [--help] option is matched
@@ -75,8 +76,12 @@ void reset() {
     // Send the "reset" string to the daemon
     send("reset");
 
-    // Inform the user that the daemon has been reset
-    printf("The demon has been reset\n");
+    // Declare a string buffer and fill it with the value received from the daemon
+    char buffer[BUFFER_SIZE];
+    receive(buffer);
+
+    // If the daemon confirms the reset, inform the user that the daemon has been reset
+    if (!strcmp(buffer, "ok")) printf("The demon has been reset\n");
 }
 
 // Used when the [--status] option is matched
@@ -101,6 +106,10 @@ void stop() {
     // Send the "stop" string to the daemon
     send("stop");
 
-    // Inform the user that the daemon has been stopped
-    printf("The demon has been banished\n");
+    // Declare a string buffer and fill it with the value received from the daemon
+    char buffer[BUFFER_SIZE];
+    receive(buffer);
+
+    // If the daemon confirms its termination, inform the user that the daemon has been stopped
+    if (!strcmp(buffer, "stopping")) printf("The demon has been banished\n");
 }

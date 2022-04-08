@@ -45,14 +45,14 @@ int main(int argc, char** argv) {
         stop();
         start();
 
-    } else if (!strcmp(argv[1], "--summon")) {
+    } else if (!strcmp(argv[1], "--start")) {
         printf("Summoning demon...\n");
         start();
 
     } else if (!strcmp(argv[1], "--status")) {
         status();
 
-    } else if (!strcmp(argv[1], "--banish")) {
+    } else if (!strcmp(argv[1], "--stop")) {
         printf("Stopping the demon...\n");
         stop();
 

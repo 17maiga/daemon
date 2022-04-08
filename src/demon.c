@@ -50,7 +50,7 @@ void run() {
             summoned = time(NULL);
 
             // Send a confirmation message
-            send("reset");
+            send("ok");
 
         } else if (!strcmp(instruction, "stop")) { // --stop
             // Send a confirmation message
